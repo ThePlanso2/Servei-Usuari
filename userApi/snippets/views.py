@@ -1,3 +1,4 @@
+from django.db.models.query import QuerySet
 from snippets.models import Snippet
 from snippets.models import User
 from snippets.serializers import SnippetSerializer
@@ -24,11 +25,13 @@ class SnippetList(generics.ListCreateAPIView):
 
 class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     #permission_classes = [HasAPIKey]
-
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
+    #queryset = Snippet.objects.all()
+    #serializer_class = SnippetSerializer
+    print("class deprecated")
 
 class UserList(generics.ListCreateAPIView):
+    #GET return all the users
+    #POST create a user
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -37,6 +40,24 @@ class UserList(generics.ListCreateAPIView):
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    #GET return all the users
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class UserVerification(generics.ListCreateAPIView):
+    
+    serializer_class = UserSerializer
+    
+    def get_queryset(self):
+        # Agafem els parametres del body
+        selects = ('password')
+        email = self.request.POST.get('email')
+        nickName = self.request.POST.get('nickName')
+        #filtrem el queryset pels parametres seleccionats
+        queryset = User.objects.filter(email = email).filter(nickName = nickName)
+        #retornem la fila obtinguda, ens falta ser capaços de retornar un parametre concret
+        return queryset
+    
+    
+    
 
