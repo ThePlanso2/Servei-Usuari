@@ -1,3 +1,4 @@
+from django.db.models.query import QuerySet
 from snippets.models import Snippet
 from snippets.models import User
 from snippets.serializers import SnippetSerializer
@@ -12,8 +13,9 @@ from rest_framework_api_key.models import APIKey
 from .permissions import Check_API_KEY_Auth
 from rest_framework_api_key.crypto import KeyGenerator
 
-
 class UserList(generics.ListCreateAPIView):
+    #GET return all the users
+    #POST create a user
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -23,6 +25,7 @@ class UserList(generics.ListCreateAPIView):
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    #GET return all the users
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
