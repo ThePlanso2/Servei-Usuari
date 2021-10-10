@@ -1,17 +1,13 @@
 from django.db.models.query import QuerySet
-from snippets.models import Snippet
 from snippets.models import User
-from snippets.serializers import SnippetSerializer
 from snippets.serializers import UserSerializer
 from rest_framework import generics
 from django.conf import settings
 from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
-from rest_framework_api_key.permissions import HasAPIKey
-from rest_framework_api_key.models import APIKey
-from .permissions import Check_API_KEY_Auth
+from snippets.serializers import ChangePasswordSerializer
 from rest_framework_api_key.crypto import KeyGenerator
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 class UserList(generics.ListCreateAPIView):
     #GET return all the users
@@ -25,7 +21,6 @@ class UserList(generics.ListCreateAPIView):
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-    #GET return all the users
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -43,3 +38,31 @@ class UserVerification(generics.ListCreateAPIView):
         #Otherwise it returns an empty JSON
         return queryset
 
+@api_view(['PUT'])
+def user_detail_api_view(request,pk=None):
+
+    if request.method == 'PUT':
+        user = User.objects.filter(id = pk).first()
+        user_serializer = UserSerializer(user,data = request.data)
+        if user_serializer.is_valid():
+            user_serializer.save()
+            return Response(user_serializer.data)
+        return Response(user_serializer.errors)
+    
+    
+  #  def get_queryset(self):
+      #  id = self.request.POST.get('id')
+      #  token = self.request.POST.get('token')
+        
+       # queryset = User.objects.filter(id = id).filter(token = token)
+        
+       # return queryset
+        
+
+   # def get_queryset(self):
+     #   id = self.request.data.get('id')
+        #queryset = User.objects.filter(id = id)
+        #return queryset
+        
+    #def ChangePass(self):
+        #new_pass = self.request.data.get('new_password')

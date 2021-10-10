@@ -4,7 +4,6 @@ from snippets.models import User
 
 
 class SnippetSerializer(serializers.ModelSerializer):
-    #owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = Snippet
@@ -16,3 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email','password', 'nickName','token']
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+
+    model = User
+    fields = ['new_password']
+    
