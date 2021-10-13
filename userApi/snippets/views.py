@@ -47,9 +47,10 @@ def user_login(request, pk=None):
     user = request.data
     user_serializer = UserSerializer(data = user)
     if user_serializer.is_valid():
-        if(User.objects.filter(email = user['email']).filter(password =user['password']).exists()):
-            user_serializer.save(token=keyGenerator.get_secret_key())
-            return Response((user_serializer.data.get('id'),user_serializer.data.get('token') ), status = status.HTTP_201_CREATED)
+        if(User.objects.filter(email = user['email']).filter(password = user['password']).exists()):
+            user = User.objects.filter(email = user['email']).first()
+            user_serializer = UserSerializer(user)
+            return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_201_CREATED)
     return Response(user_serializer.errors)
 
 
