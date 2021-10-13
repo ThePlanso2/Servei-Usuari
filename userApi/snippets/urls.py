@@ -31,7 +31,11 @@ urlpatterns = [
     path('users/<int:pk>/', views.user_detail_api_view, name = 'Concrete user'),
     path('verify-user/', views.UserVerification.as_view()),
     path('change_pass/<int:pk>/', views.user_detail_api_view, name = 'Update password'),
+<<<<<<< HEAD
     path('login/', views.user_login), 
+=======
+    path('login/', views.user_login, name = 'Login'),
+>>>>>>> 696c3c1315259bcb6319b4b42f80398f733ccc68
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
