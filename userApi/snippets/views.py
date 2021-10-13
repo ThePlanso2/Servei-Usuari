@@ -1,7 +1,9 @@
+import json
 from django.db.models.query import QuerySet
+from django.http.response import JsonResponse
 from snippets.models import User
 from snippets.serializers import UserSerializer
-from rest_framework import generics
+from rest_framework import generics, serializers
 from django.conf import settings
 from django.db.models.signals import post_save
 from snippets.serializers import ChangePasswordSerializer
@@ -16,6 +18,12 @@ class UserList(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
+        email = self.request.POST.get('email')
+        nickName = self.request.POST.get('nickName')
+
+        if(User.objects.filter(nickName=nickName).exists()):  raise serializers.ValidationError('NickName already exists')
+        elif (User.objects.filter(email=email).exists()): raise serializers.ValidationError('Email already exists')
+         
         keyGenerator = KeyGenerator(prefix_length=2, secret_key_length=32)
         serializer.save(token=keyGenerator.get_secret_key())
 
@@ -36,7 +44,8 @@ class UserVerification(generics.ListCreateAPIView):
         
         #if we have a user that match the id and the token then it returns all the data from the user
         #Otherwise it returns an empty JSON
-        return queryset
+        
+        return queryset 
 
 class UserLogin(generics.ListCreateAPIView):
  
@@ -52,7 +61,7 @@ class UserLogin(generics.ListCreateAPIView):
         return queryset
 
 @api_view(['PUT'])
-def user_detail_api_view(request,pk=None):
+def user_detail_api_view(request, pk=None):
 
     if request.method == 'PUT':
         user = User.objects.filter(id = pk).first()
@@ -62,7 +71,21 @@ def user_detail_api_view(request,pk=None):
             return Response(user_serializer.data)
         return Response(user_serializer.errors)
     
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   #  def get_queryset(self):
       #  id = self.request.POST.get('id')
       #  token = self.request.POST.get('token')
