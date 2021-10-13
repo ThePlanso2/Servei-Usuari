@@ -1,36 +1,14 @@
-import json
 from django.db.models.query import QuerySet
 from django.http.response import JsonResponse
 from snippets.models import User
 from snippets.serializers import UserSerializer
-from rest_framework import generics, serializers
+from rest_framework import generics
 from django.conf import settings
 from django.db.models.signals import post_save
-from snippets.serializers import ChangePasswordSerializer
 from rest_framework_api_key.crypto import KeyGenerator
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
-class UserList(generics.ListCreateAPIView):
-    #GET return all the users
-    #POST create a user
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        email = self.request.POST.get('email')
-        nickName = self.request.POST.get('nickName')
-
-        if(User.objects.filter(nickName=nickName).exists()):  raise serializers.ValidationError('NickName already exists')
-        elif (User.objects.filter(email=email).exists()): raise serializers.ValidationError('Email already exists')
-         
-        keyGenerator = KeyGenerator(prefix_length=2, secret_key_length=32)
-        serializer.save(token=keyGenerator.get_secret_key())
-
-
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+from rest_framework import status
 
 class UserVerification(generics.ListCreateAPIView):
  
@@ -44,36 +22,56 @@ class UserVerification(generics.ListCreateAPIView):
         
         #if we have a user that match the id and the token then it returns all the data from the user
         #Otherwise it returns an empty JSON
-        
-        return queryset 
-
-class UserLogin(generics.ListCreateAPIView):
- 
-    serializer_class = UserSerializer
-    
-    def get_queryset(self):
-        email = self.request.POST.get('email')
-        password = self.request.POST.get('password')
-        queryset = User.objects.filter(email = email).filter(password = password)
-        
-        #if we have a user that match the email and the password then it returns all the data from the user
-        #Otherwise it returns an empty JSON
         return queryset
+
+keyGenerator = KeyGenerator(prefix_length=2, secret_key_length=32)
+
+@api_view(['GET','POST'])
+def all_users_api_view(request,pk=None):
+
+    if request.method == 'GET':
+        user = User.objects.all()
+        user_serializer = UserSerializer(user, many = True)
+        return Response(user_serializer.data, status = status.HTTP_200_OK)
+
+    if request.method == 'POST':
+        user = request.data
+        user_serializer = UserSerializer(data = user)
+        if user_serializer.is_valid():
+            user_serializer.save(token=keyGenerator.get_secret_key())
+            return Response((user_serializer.data.get('id'),user_serializer.data.get('token') ), status = status.HTTP_201_CREATED)
+        return Response(user_serializer.errors)
+
+@api_view(['POST'])
+def user_login(request, pk=None):
+    user = request.data
+    user_serializer = UserSerializer(data = user)
+    if user_serializer.is_valid():
+        if(User.objects.filter(email = user['email']).filter(password =user['password']).exists()):
+            user_serializer.save(token=keyGenerator.get_secret_key())
+            return Response((user_serializer.data.get('id'),user_serializer.data.get('token') ), status = status.HTTP_201_CREATED)
+    return Response(user_serializer.errors)
+
 
 @api_view(['PUT'])
 def user_detail_api_view(request, pk=None):
 
+    if request.method == 'GET':
+        user = User.objects.filter(id = pk).first()
+        user_serializer = UserSerializer(user)
+        return Response(user_serializer.data, status = status.HTTP_201_CREATED)
+
+
     if request.method == 'PUT':
         user = User.objects.filter(id = pk).first()
         user_serializer = UserSerializer(user,data = request.data)
+        
         if user_serializer.is_valid():
-            user_serializer.save()
-            return Response(user_serializer.data)
+            if(User.objects.filter(email =request.data['email'] ).filter(password= request.data['password']).exists()):
+                user_serializer.save(password = request.data['passwordNew'],token=keyGenerator.get_secret_key())
+                return Response(user_serializer.data)
         return Response(user_serializer.errors)
     
-
-
-
 
 
 
