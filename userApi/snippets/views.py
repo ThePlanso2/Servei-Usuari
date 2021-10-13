@@ -45,6 +45,8 @@ def all_users_api_view(request,pk=None):
 @api_view(['POST'])
 def user_login(request, pk=None):
     user = request.data
+    print(request.data)
+    #user += 
     user_serializer = UserSerializer(data = user)
     if user_serializer.is_valid():
         if(User.objects.filter(email = user['email']).filter(password =user['password']).exists()):
