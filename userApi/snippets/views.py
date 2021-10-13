@@ -38,6 +38,20 @@ class UserVerification(generics.ListCreateAPIView):
         #Otherwise it returns an empty JSON
         return queryset
 
+class UserLogin(generics.ListCreateAPIView):
+ 
+    serializer_class = UserSerializer
+    
+    def get_queryset(self):
+        email = self.request.POST.get('email')
+        password = self.request.POST.get('password')
+        
+        queryset = User.objects.filter(email = email).filter(password = password)
+        
+        #if we have a user that match the email and the password then it returns all the data from the user
+        #Otherwise it returns an empty JSON
+        return queryset
+
 @api_view(['PUT'])
 def user_detail_api_view(request,pk=None):
 
