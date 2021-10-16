@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'snippets.apps.SnippetsConfig',
     'rest_framework_api_key',
-    'rest_framework_swagger',
     'drf_yasg',
+    
+    
 ]
 
 MIDDLEWARE = [

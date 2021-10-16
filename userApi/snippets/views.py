@@ -1,8 +1,9 @@
 from django.db.models.query import QuerySet
 from django.http.response import JsonResponse
+from rest_framework.fields import NullBooleanField
 from snippets.models import User
 from snippets.serializers import UserSerializer
-from rest_framework import generics
+from rest_framework import generics, serializers
 from django.conf import settings
 from django.db.models.signals import post_save
 from rest_framework_api_key.crypto import KeyGenerator
@@ -45,15 +46,31 @@ def all_users_api_view(request,pk=None):
 @api_view(['POST'])
 def user_login(request, pk=None):
     user = request.data
-    print(request.data)
-    #user += 
     user_serializer = UserSerializer(data = user)
+
+    #login with email and password
     if user_serializer.is_valid():
-        if(User.objects.filter(email = user['email']).filter(password = user['password']).exists()):
-            user = User.objects.filter(email = user['email']).first()
-            user_serializer = UserSerializer(user)
-            return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_201_CREATED)
-    return Response(user_serializer.errors)
+        if (user_serializer.data.get('email') == None or user_serializer.data.get('password') == None):
+            return Response({'message':'Please check your credentials and try again'},status = status.HTTP_400_BAD_REQUEST)
+        else:
+            if(User.objects.filter(email = user['email']).filter(password = user['password']).exists()):
+                user = User.objects.filter(email = user['email']).first()
+                user_serializer = UserSerializer(user)
+                return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_200_OK)
+
+    #login with id and token
+    if not user_serializer.is_valid():
+        if (request.POST.get('id') == None or request.POST.get('token') == None):
+            return Response({'message':'Please check your credentials and try again'},status = status.HTTP_400_BAD_REQUEST)
+            
+        else:
+            if(User.objects.filter(id = user['id']).filter(token = user['token']).exists()):
+                user = User.objects.filter(id = user['id']).first()
+                user_serializer = UserSerializer(user)
+                return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_200_OK)
+            
+
+    return Response({'message':'Please check your credentials and try again'},status = status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
@@ -66,40 +83,20 @@ def user_detail_api_view(request, pk=None):
 
 
     if request.method == 'PUT':
-        user = User.objects.filter(id = pk).first()
-        user_serializer = UserSerializer(user,data = request.data)
-        
+        user_serializer = UserSerializer(data = request.data)
+
         if user_serializer.is_valid():
-            if(User.objects.filter(email =request.data['email'] ).filter(password= request.data['password']).exists()):
-                user_serializer.save(password = request.data['passwordNew'],token=keyGenerator.get_secret_key())
-                return Response(user_serializer.data)
+            if (user_serializer.data.get('email') == None or user_serializer.data.get('password') == None):
+                if (user_serializer.data.get('num') == None or user_serializer.data.get('token') == None):
+                    return Response({'message':'Please check your credentials and try again'},status = status.HTTP_400_BAD_REQUEST)
+                else:
+                    if(User.objects.filter(id = user_serializer.data.get('num')).filter(token = User.objects.get('token')).exists()):
+                        user_serializer.save(password = user_serializer.data.get('password'),token=keyGenerator.get_secret_key())
+
+                        return Response(user_serializer.data)
+            #else: 
+               # if(User.objects.filter(email = user['email']).filter(password = user['password']).exists()):
+                 #   if(User.objects.filter(email =request.data['email'] ).filter(password= request.data['password']).exists()):
+                   #     user_serializer.save(password = request.data['passwordNew'],token=keyGenerator.get_secret_key())
+                    #    return Response(user_serializer.data)           
         return Response(user_serializer.errors)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-  #  def get_queryset(self):
-      #  id = self.request.POST.get('id')
-      #  token = self.request.POST.get('token')
-        
-       # queryset = User.objects.filter(id = id).filter(token = token)
-        
-       # return queryset
-        
-
-   # def get_queryset(self):
-     #   id = self.request.data.get('id')
-        #queryset = User.objects.filter(id = id)
-        #return queryset
-        
-    #def ChangePass(self):
-        #new_pass = self.request.data.get('new_password')

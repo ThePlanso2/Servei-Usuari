@@ -7,10 +7,12 @@ from pygments import highlight
 
 
 class User(models.Model):
-    email = models.TextField()
-    password = models.TextField()
-    nickName = models.TextField(default = '' ,max_length = 30)
+    num = models.IntegerField(default= 1000,blank=True)
+    email = models.TextField(blank=True,max_length = 50)
+    password = models.TextField(blank=True)
+    nickName = models.TextField(default = '' ,max_length = 50)
     token = models.TextField(default = 'xxx')
 
     class Meta:
         ordering = ['id']   
+
