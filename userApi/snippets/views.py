@@ -47,13 +47,11 @@ keyGenerator = KeyGenerator(prefix_length=2, secret_key_length=32)
 @api_view(['POST'])
 def user_verification(request, pk=None):
     user = request.data
-    x = {'verification':False}
     user_serializer = UserSerializer(data = user)
     if(User.objects.filter(id = user['id']).filter(token = user['token']).exists()):
         user_serializer = UserSerializer(user)
-        x = {'verification':True}
-        return Response((json.dumps(x)), status = status.HTTP_201_CREATED)
-    return Response((json.dumps(x)), status = status.HTTP_404_NOT_FOUND)
+        return Response({ 'verification':True}, status = status.HTTP_201_CREATED)
+    return Response({'verification':False}, status = status.HTTP_404_NOT_FOUND)
 
 
 @swagger_auto_schema(methods=['post'],
@@ -94,7 +92,7 @@ def all_users_api_view(request,pk=None):
         user_serializer = UserSerializer(data = user)
         if user_serializer.is_valid():
             user_serializer.save(token=keyGenerator.get_secret_key())
-            return Response((user_serializer.data.get('id'),user_serializer.data.get('token') ), status = status.HTTP_201_CREATED)
+            return Response({ 'id': user_serializer.data.get('id'), 'token': user_serializer.data.get('token')}, status = status.HTTP_201_CREATED)
         return Response(user_serializer.errors)
 
 
@@ -117,7 +115,7 @@ def user_login(request, pk=None):
         if(User.objects.filter(email = user['email']).filter(password = user['password']).exists()):
             user = User.objects.filter(email = user['email']).first()
             user_serializer = UserSerializer(user)
-            return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_201_CREATED)
+            return Response({ 'id': user_serializer.data.get('id'), 'token': user_serializer.data.get('token')}, status = status.HTTP_201_CREATED)
     return Response(user_serializer.errors)
 
 
@@ -138,7 +136,7 @@ def user_login_id_token(request, pk=None):
     if(User.objects.filter(id = user['id']).filter(token = user['token']).exists()):
         user = User.objects.filter(id = user['id']).first()
         user_serializer = UserSerializer(user)
-        return Response((user_serializer.data.get('id'),user_serializer.data.get('token')), status = status.HTTP_201_CREATED)
+        return Response({ 'id': user_serializer.data.get('id'), 'token': user_serializer.data.get('token')}, status = status.HTTP_201_CREATED)
     return Response(status = status.HTTP_404_NOT_FOUND)
 
 
@@ -209,7 +207,7 @@ def user_change_pass_api_view(request, pk=None):
         type=openapi.TYPE_OBJECT,
         required=['id', 'password', 'token'],
         properties={
-            'id': openapi.Schema(type=openapi.TYPE_STRING),
+            'id': openapi.Schema(type=openapi.TYPE_NUMBER),
             'password': openapi.Schema(type=openapi.TYPE_STRING),
             'token': openapi.Schema(type=openapi.TYPE_STRING)
         },
